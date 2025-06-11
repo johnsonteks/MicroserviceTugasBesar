@@ -1,0 +1,29 @@
+type Order {
+  id: ID!
+  code: String!
+  product_id: ID!
+  user_id: ID!
+  status: String!
+  total_price: Float!
+  quantity: Int!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+input CreateOrderInput {
+  product_id: ID!
+  user_id: ID!
+  status: String!
+  total_price: Float!
+  quantity: Int!
+}
+
+type Query {
+  orders: [Order!]! @field(resolver: "App\\GraphQL\\Queries\\OrderQueries@all")
+  order(id: ID!): Order @field(resolver: "App\\GraphQL\\Queries\\OrderQueries@find")
+  ordersByUser(id: ID!): [Order]! @field(resolver: "App\\GraphQL\\Queries\\OrderQueries@byUser")
+}
+
+type Mutation {
+  createOrder(input: CreateOrderInput!): Order @field(resolver: "App\\GraphQL\\Mutations\\OrderMutations@create")
+}

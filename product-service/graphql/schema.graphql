@@ -1,0 +1,52 @@
+# Scalar
+scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+# Product Type
+type Product {
+  id: ID!
+  code: String!
+  name: String!
+  description: String!
+  price: Float!
+  stock: Int!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+# Input Types
+input CreateProductInput {
+  code: String!
+  name: String!
+  description: String!
+  price: Float!
+  stock: Int!
+}
+
+input UpdateProductInput {
+  id: ID!
+  code: String
+  name: String
+  description: String
+  price: Float
+  stock: Int
+}
+
+input UpdateStockInput {
+  id: ID!
+  product_quantity: Int!
+}
+
+# Queries
+type Query {
+  products: [Product!]! @field(resolver: "App\\GraphQL\\Queries\\ProductQueries@all")
+  product(id: ID!): Product @field(resolver: "App\\GraphQL\\Queries\\ProductQueries@find")
+}
+
+# Mutations
+type Mutation {
+  createProduct(input: CreateProductInput!): Product @field(resolver: "App\\GraphQL\\Mutations\\ProductMutations@create")
+  updateProduct(input: UpdateProductInput!): Product @field(resolver: "App\\GraphQL\\Mutations\\ProductMutations@update")
+  deleteProduct(id: ID!): Product @field(resolver: "App\\GraphQL\\Mutations\\ProductMutations@delete")
+  increaseStock(input: UpdateStockInput!): Product @field(resolver: "App\\GraphQL\\Mutations\\ProductMutations@increaseStock")
+  decreaseStock(input: UpdateStockInput!): Product @field(resolver: "App\\GraphQL\\Mutations\\ProductMutations@decreaseStock")
+}

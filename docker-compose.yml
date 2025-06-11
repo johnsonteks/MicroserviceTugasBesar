@@ -1,0 +1,185 @@
+version: '3.8'
+
+services:
+  # User Service
+  user_app:
+    build: ./user-service
+    container_name: user-service-app
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./user-service:/var/www
+    working_dir: /var/www
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    networks:
+      - laravel-net
+    depends_on:
+      user_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+
+  user_db:
+    image: mysql:8
+    container_name: user_db
+    environment:
+      MYSQL_DATABASE: user_service
+      MYSQL_ROOT_PASSWORD: secret
+    volumes:
+      - user_db_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - laravel-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Product Service
+  product_app:
+    build: ./product-service
+    container_name: product-service-app
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./product-service:/var/www
+    working_dir: /var/www
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    networks:
+      - laravel-net
+    depends_on:
+      product_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+
+  product_db:
+    image: mysql:8
+    container_name: product_db
+    environment:
+      MYSQL_DATABASE: product_service
+      MYSQL_ROOT_PASSWORD: secret
+    volumes:
+      - product_db_data:/var/lib/mysql
+    ports:
+      - "3308:3306"
+    networks:
+      - laravel-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Order Service
+  order_app:
+    build: ./order-service
+    container_name: order-service-app
+    ports:
+      - "8003:8000"
+    volumes:
+      - ./order-service:/var/www
+    working_dir: /var/www
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    networks:
+      - laravel-net
+    depends_on:
+      order_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+
+  order_db:
+    image: mysql:8
+    container_name: order_db
+    environment:
+      MYSQL_DATABASE: order_service
+      MYSQL_ROOT_PASSWORD: secret
+    volumes:
+      - order_db_data:/var/lib/mysql
+    ports:
+      - "3309:3306"
+    networks:
+      - laravel-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - laravel-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+ # phpMyAdmin untuk User Service
+  phpmyadmin-user:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin-user
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: user_db
+      PMA_USER: root
+      PMA_PASSWORD: secret
+      PMA_VERBOSE: "User Service Database"
+    networks:
+      - laravel-net
+    depends_on:
+      - user_db
+
+  # phpMyAdmin untuk Product Service
+  phpmyadmin-product:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin-product
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: product_db
+      PMA_USER: root
+      PMA_PASSWORD: secret
+      PMA_VERBOSE: "Product Service Database"
+    networks:
+      - laravel-net
+    depends_on:
+      - product_db
+
+  # phpMyAdmin untuk Order Service
+  phpmyadmin-order:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin-order
+    ports:
+      - "8082:80"
+    environment:
+      PMA_HOST: order_db
+      PMA_USER: root
+      PMA_PASSWORD: secret
+      PMA_VERBOSE: "Order Service Database"
+    networks:
+      - laravel-net
+    depends_on:
+      - order_db
+      
+networks:
+  laravel-net:
+    driver: bridge
+
+volumes:
+  user_db_data:
+  product_db_data:
+  order_db_data:

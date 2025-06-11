@@ -1,0 +1,42 @@
+# Scalar Types
+scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+# Types
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  email_verified_at: DateTime
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+# Query
+type Query {
+  users(name: String @where(operator: "like")): [User!]! @paginate(defaultCount: 10)
+user(
+  id: ID @eq @rules(apply: ["prohibits:email", "required_without:email"])
+  email: String @eq @rules(apply: ["prohibits:id", "required_without:id", "email"])
+): User @find
+}
+
+# Input Object Types
+input CreateUserInput {
+  name: String!
+  email: String!
+  password: String!
+}
+
+input UpdateUserInput {
+  id: ID!
+  name: String
+  email: String
+  password: String
+}
+
+# Mutation and Resolver
+type Mutation {
+  createUser(input: CreateUserInput!): User @field(resolver: "App\\GraphQL\\Mutations\\UserMutations@create")
+  updateUser(input: UpdateUserInput!): User @field(resolver: "App\\GraphQL\\Mutations\\UserMutations@update")
+  deleteUser(id: ID!): User @field(resolver: "App\\GraphQL\\Mutations\\UserMutations@delete")
+}
